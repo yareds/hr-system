@@ -1,0 +1,6 @@
+{
+  "name": "Etex HRMS",
+  "description": "Etex HRMS - Administrative Human Resource Management System for Company Owners and HR Managers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

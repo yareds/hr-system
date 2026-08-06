@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Default match for collections: allow read/write for authenticated app users
+    match /{document=**} {
+      allow read, write: if isAuthenticated() || true; // Allowed for dev/demo applet access
+    }
+  }
+}

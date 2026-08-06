@@ -1,0 +1,335 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Account & Role Profile",
+      "description": "User accounts with assigned system roles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["Super Admin", "HR Manager", "Payroll Officer", "Department Manager", "Employee"] },
+        "employeeId": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "employees": {
+      "title": "Employee Profile",
+      "description": "Comprehensive employee profile record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "gender": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "address": { "type": "string" },
+        "emergencyContact": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "relationship": { "type": "string" },
+            "phone": { "type": "string" }
+          }
+        },
+        "department": { "type": "string" },
+        "position": { "type": "string" },
+        "managerId": { "type": "string" },
+        "managerName": { "type": "string" },
+        "employmentType": { "type": "string", "enum": ["Full-Time", "Part-Time", "Contract", "Intern"] },
+        "hireDate": { "type": "string" },
+        "employmentStatus": { "type": "string", "enum": ["Active", "On Leave", "Archived", "Terminated"] },
+        "salary": { "type": "number" },
+        "payType": { "type": "string", "enum": ["Salary", "Hourly"] },
+        "hourlyRate": { "type": "number" },
+        "payFrequency": { "type": "string", "enum": ["Monthly", "Biweekly", "Weekly"] },
+        "costCenter": { "type": "string" },
+        "location": { "type": "string" },
+        "bankInfo": {
+          "type": "object",
+          "properties": {
+            "bankName": { "type": "string" },
+            "accountNumber": { "type": "string" },
+            "routingNumber": { "type": "string" }
+          }
+        },
+        "taxInfo": {
+          "type": "object",
+          "properties": {
+            "taxId": { "type": "string" },
+            "filingStatus": { "type": "string" },
+            "allowances": { "type": "number" }
+          }
+        },
+        "workSchedule": { "type": "string" },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "type": { "type": "string" },
+              "url": { "type": "string" },
+              "uploadedAt": { "type": "string" }
+            }
+          }
+        },
+        "leaveBalance": {
+          "type": "object",
+          "properties": {
+            "annual": { "type": "number" },
+            "sick": { "type": "number" },
+            "personal": { "type": "number" },
+            "maternity": { "type": "number" },
+            "paternity": { "type": "number" },
+            "bereavement": { "type": "number" }
+          }
+        },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["employeeId", "firstName", "lastName", "email", "department", "position", "employmentStatus"]
+    },
+    "departments": {
+      "title": "Department Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "managerId": { "type": "string" },
+        "managerName": { "type": "string" },
+        "costCenter": { "type": "string" },
+        "location": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "code"]
+    },
+    "positions": {
+      "title": "Job Position Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "department": { "type": "string" },
+        "grade": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["title", "department"]
+    },
+    "attendance": {
+      "title": "Attendance Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "department": { "type": "string" },
+        "date": { "type": "string" },
+        "clockIn": { "type": "string" },
+        "clockOut": { "type": "string" },
+        "breakDurationMinutes": { "type": "number" },
+        "totalHours": { "type": "number" },
+        "overtimeHours": { "type": "number" },
+        "status": { "type": "string", "enum": ["Present", "Late", "Absent", "Half-Day", "On Leave"] },
+        "notes": { "type": "string" }
+      },
+      "required": ["employeeId", "date", "status"]
+    },
+    "leaveRequests": {
+      "title": "Leave Request Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "department": { "type": "string" },
+        "leaveType": { "type": "string", "enum": ["Annual", "Sick", "Personal", "Maternity", "Paternity", "Bereavement", "Unpaid"] },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "totalDays": { "type": "number" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected", "Cancelled"] },
+        "approverId": { "type": "string" },
+        "approverName": { "type": "string" },
+        "approverNote": { "type": "string" },
+        "appliedAt": { "type": "string" }
+      },
+      "required": ["employeeId", "leaveType", "startDate", "endDate", "totalDays", "status"]
+    },
+    "payroll": {
+      "title": "Payroll Run & Payslip Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "periodStart": { "type": "string" },
+        "periodEnd": { "type": "string" },
+        "payDate": { "type": "string" },
+        "frequency": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Processing", "Completed", "Cancelled"] },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "department": { "type": "string" },
+        "baseSalary": { "type": "number" },
+        "hourlyRate": { "type": "number" },
+        "hoursWorked": { "type": "number" },
+        "overtimePay": { "type": "number" },
+        "bonuses": { "type": "number" },
+        "commissions": { "type": "number" },
+        "allowances": { "type": "number" },
+        "grossPay": { "type": "number" },
+        "taxDeductions": { "type": "number" },
+        "retirementDeductions": { "type": "number" },
+        "otherDeductions": { "type": "number" },
+        "totalDeductions": { "type": "number" },
+        "netPay": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["employeeId", "periodStart", "periodEnd", "grossPay", "netPay", "status"]
+    },
+    "performanceReviews": {
+      "title": "Performance Review & Goal Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "reviewerId": { "type": "string" },
+        "reviewerName": { "type": "string" },
+        "reviewPeriod": { "type": "string" },
+        "overallRating": { "type": "number" },
+        "goals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "status": { "type": "string" },
+              "progress": { "type": "number" }
+            }
+          }
+        },
+        "feedback": { "type": "string" },
+        "strengths": { "type": "string" },
+        "improvements": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Submitted", "Completed"] },
+        "reviewDate": { "type": "string" }
+      },
+      "required": ["employeeId", "reviewPeriod", "status"]
+    },
+    "recruitment": {
+      "title": "Job Openings & Applicants Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["job", "candidate"] },
+        "title": { "type": "string" },
+        "department": { "type": "string" },
+        "location": { "type": "string" },
+        "employmentType": { "type": "string" },
+        "status": { "type": "string" },
+        "candidateName": { "type": "string" },
+        "candidateEmail": { "type": "string" },
+        "candidatePhone": { "type": "string" },
+        "appliedDate": { "type": "string" },
+        "jobId": { "type": "string" },
+        "interviewDate": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["type", "status"]
+    },
+    "assets": {
+      "title": "Company Asset Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assetTag": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Laptop", "Phone", "Monitor", "Keys", "Access Card", "Vehicle", "Other"] },
+        "serialNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["Available", "Assigned", "Under Maintenance", "Retired"] },
+        "assignedEmployeeId": { "type": "string" },
+        "assignedEmployeeName": { "type": "string" },
+        "assignedDate": { "type": "string" },
+        "value": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["assetTag", "name", "category", "status"]
+    },
+    "announcements": {
+      "title": "Company Announcement Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "category": { "type": "string" },
+        "isPinned": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "content", "author"]
+    },
+    "notifications": {
+      "title": "In-app Notification Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["recipientId", "title", "message", "read"]
+    },
+    "auditLogs": {
+      "title": "Audit Log Record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userName": { "type": "string" },
+        "userRole": { "type": "string" },
+        "action": { "type": "string" },
+        "module": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["action", "timestamp"]
+    },
+    "settings": {
+      "title": "Company Settings Record",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "taxId": { "type": "string" },
+        "currency": { "type": "string" },
+        "fiscalYearStart": { "type": "string" },
+        "payFrequency": { "type": "string" },
+        "standardWorkHours": { "type": "number" },
+        "overtimeMultiplier": { "type": "number" },
+        "maternityLeaveDays": { "type": "number" },
+        "paternityLeaveDays": { "type": "number" },
+        "annualLeaveDays": { "type": "number" },
+        "sickLeaveDays": { "type": "number" },
+        "address": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" }
+      }
+    }
+  }
+}

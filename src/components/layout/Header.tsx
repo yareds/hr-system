@@ -1,0 +1,258 @@
+import React, { useState } from 'react';
+import {
+  Search,
+  Bell,
+  Sun,
+  Moon,
+  ChevronDown,
+  ShieldCheck,
+  UserCheck,
+  CheckCheck,
+  Clock,
+  Sparkles,
+  LogOut,
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useData } from '../../context/DataContext';
+import { Role } from '../../types';
+import { GlobalSearchModal } from '../common/GlobalSearchModal';
+
+interface HeaderProps {
+  onNavigate: (view: string) => void;
+  activeView: string;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onNavigate, activeView }) => {
+  const { user, currentRole, switchRole, currentEmployee, isEmployeeViewOnly } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useData();
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const unreadNotifications = notifications.filter((n) => !n.read);
+
+  const rolesList: { role: Role; label: string; desc: string; icon: string }[] = [
+    { role: 'Super Admin', label: 'Super Admin / Company Owner', desc: 'Full system configuration, settings & admin governance', icon: '👑' },
+    { role: 'HR Manager', label: 'HR Manager', desc: 'Employee, payroll, leave & recruitment admin', icon: '💼' },
+  ];
+
+  return (
+    <>
+      <header className="sticky top-0 z-30 h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between transition-colors">
+        {/* Left: View Breadcrumb & Search Trigger */}
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span>Etex HRMS</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-slate-100 capitalize font-bold">
+              {activeView.replace('-', ' ')}
+            </span>
+          </div>
+
+          {/* Search Trigger Input */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs transition-colors w-48 sm:w-64 justify-between border border-transparent dark:border-slate-700"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5" />
+              <span>Search HR records...</span>
+            </div>
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-slate-400">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
+
+        {/* Right: Controls (RBAC Switcher, Theme, Notifications, Profile) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Role Switcher Pill Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsRoleMenuOpen(!isRoleMenuOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 rounded-lg text-xs font-semibold text-indigo-700 dark:text-indigo-300 transition-colors"
+              title="Click to test role permissions"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden md:inline">Role:</span>
+              <span>{currentRole}</span>
+              <ChevronDown className="w-3 h-3 text-indigo-500 ml-0.5" />
+            </button>
+
+            {isRoleMenuOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-2 divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>Switch Active Role (RBAC)</span>
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                </div>
+
+                <div className="py-1">
+                  {rolesList.map((item) => (
+                    <button
+                      key={item.role}
+                      onClick={() => {
+                        switchRole(item.role);
+                        setIsRoleMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2.5 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+                        currentRole === item.role ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-medium' : ''
+                      }`}
+                    >
+                      <span className="text-base mt-0.5">{item.icon}</span>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                          {item.label}
+                          {currentRole === item.role && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">{item.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
+
+          {/* Notifications Popover */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              className="relative p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadNotifications.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-2 overflow-hidden">
+                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>Notifications</span>
+                    {unreadNotifications.length > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-[10px]">
+                        {unreadNotifications.length} new
+                      </span>
+                    )}
+                  </div>
+                  {unreadNotifications.length > 0 && (
+                    <button
+                      onClick={markAllNotificationsRead}
+                      className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                  {notifications.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-400">No notifications</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => markNotificationRead(n.id)}
+                        className={`p-3 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer ${
+                          !n.read ? 'bg-indigo-50/40 dark:bg-indigo-950/20' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{n.title}</span>
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-400 mt-1 leading-snug">{n.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* User Profile Menu */}
+          <div className="relative pl-1 border-l border-slate-200 dark:border-slate-800">
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <img
+                src={
+                  currentEmployee?.photoUrl ||
+                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80'
+                }
+                alt={currentEmployee?.fullName || 'User'}
+                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+              />
+              <div className="hidden lg:block text-left">
+                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                  {currentEmployee?.fullName || 'Sarah Jenkins'}
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">{currentRole}</div>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
+            </button>
+
+            {isProfileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1.5 divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="px-4 py-2.5">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    {currentEmployee?.fullName}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{currentEmployee?.email}</div>
+                  <div className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">
+                    ID: {currentEmployee?.employeeId}
+                  </div>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      onNavigate('settings');
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-slate-400" />
+                    <span>Company & Governance Settings</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Global Search Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectResult={(type, id) => {
+          if (type === 'employee') onNavigate('employees');
+          else if (type === 'department') onNavigate('organization');
+          else if (type === 'payroll') onNavigate('payroll');
+          else if (type === 'leave') onNavigate('leave');
+        }}
+      />
+    </>
+  );
+};
