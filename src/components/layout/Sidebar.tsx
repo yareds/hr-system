@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
@@ -25,7 +26,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
-  const { currentRole, hasRole } = useAuth();
+  const { currentRole, hasRole, user, logout } = useAuth();
   const { leaveRequests, jobs } = useData();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -172,21 +173,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
         })}
       </div>
 
-      {/* Footer Role Badge */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/40">
+      {/* Footer Role Badge & Sign Out */}
+      <div className="p-3 border-t border-slate-800 bg-slate-950/40 space-y-2">
         {!collapsed ? (
-          <div className="p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/60 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
-              <div className="truncate">
-                <div className="text-[11px] font-semibold text-slate-200">{currentRole}</div>
-                <div className="text-[10px] text-slate-400 truncate">RBAC Active</div>
+          <>
+            <div className="p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/60 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
+                <div className="truncate">
+                  <div className="text-[11px] font-semibold text-slate-200">{currentRole}</div>
+                  <div className="text-[10px] text-slate-400 truncate">{user?.email || 'Logged In'}</div>
+                </div>
               </div>
             </div>
-          </div>
+
+            <button
+              onClick={logout}
+              className="w-full py-2 px-3 bg-slate-800/90 hover:bg-rose-950/40 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700/60 hover:border-rose-800/60 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Sign Out</span>
+            </button>
+          </>
         ) : (
-          <div className="flex justify-center" title={`Active Role: ${currentRole}`}>
-            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+          <div className="space-y-2 text-center">
+            <div className="flex justify-center" title={`Active Role: ${currentRole} (${user?.email})`}>
+              <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            </div>
+            <button
+              onClick={logout}
+              className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 mx-auto block transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>

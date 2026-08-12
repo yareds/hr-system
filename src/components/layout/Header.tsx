@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, activeView }) => {
-  const { user, currentRole, switchRole, currentEmployee, isEmployeeViewOnly } = useAuth();
+  const { user, currentRole, switchRole, currentEmployee, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { notifications, markNotificationRead, markAllNotificationsRead } = useData();
 
@@ -191,36 +191,47 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, activeView }) => {
 
           {/* User Profile Menu */}
           <div className="relative pl-1 border-l border-slate-200 dark:border-slate-800">
-            <button
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <img
-                src={
-                  currentEmployee?.photoUrl ||
-                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80'
-                }
-                alt={currentEmployee?.fullName || 'User'}
-                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-              />
-              <div className="hidden lg:block text-left">
-                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
-                  {currentEmployee?.fullName || 'Sarah Jenkins'}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <img
+                  src={
+                    user?.avatarUrl ||
+                    currentEmployee?.photoUrl ||
+                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80'
+                  }
+                  alt={user?.displayName || currentEmployee?.fullName || 'User'}
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                />
+                <div className="hidden lg:block text-left">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                    {user?.displayName || currentEmployee?.fullName || 'Yared Abegaz'}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">{currentRole}</div>
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">{currentRole}</div>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
-            </button>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
+              </button>
+
+              <button
+                onClick={logout}
+                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-0.5"
+                title="Sign Out of Etex HRMS"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
 
             {isProfileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1.5 divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1.5 divide-y divide-slate-100 dark:divide-slate-800">
                 <div className="px-4 py-2.5">
-                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                    {currentEmployee?.fullName}
+                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {user?.displayName || currentEmployee?.fullName}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{currentEmployee?.email}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{user?.email || currentEmployee?.email}</div>
                   <div className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 mt-0.5">
-                    ID: {currentEmployee?.employeeId}
+                    Role: {currentRole}
                   </div>
                 </div>
 
@@ -234,6 +245,19 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, activeView }) => {
                   >
                     <ShieldCheck className="w-4 h-4 text-slate-400" />
                     <span>Company & Governance Settings</span>
+                  </button>
+                </div>
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 font-medium transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </div>
