@@ -1,9 +1,12 @@
 {
-  "projectId": "",
-  "appId": "",
-  "apiKey": "",
-  "authDomain": "",
+  "projectId": "etex-hrms",
+  "appId": "1:512420831534:web:3c8974ff1c891231ed9abf",
+  "apiKey": "AIzaSyBm7tytEYEe5PGUFOFn7SVoemVzVYYFJYg",
+  "authDomain": "etex-hrms.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
-  "storageBucket": "",
-  "messagingSenderId": ""
+  "storageBucket": "etex-hrms.firebasestorage.app",
+  "messagingSenderId": "512420831534",
+  "measurementId": "",
+  "oAuthClientId": "512420831534-utglainqfue529ivthsq8lrd61plu93t.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
 }

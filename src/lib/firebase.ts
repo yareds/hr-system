@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeFirestore, Firestore } from 'firebase/firestore';
 import config from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -23,9 +23,11 @@ if (isConfigured) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    db = config.firestoreDatabaseId && config.firestoreDatabaseId !== '(default)'
-      ? getFirestore(app, config.firestoreDatabaseId)
-      : getFirestore(app);
+    db = initializeFirestore(
+      app,
+      { experimentalAutoDetectLongPolling: true },
+      config.firestoreDatabaseId || '(default)'
+    );
   } catch (err) {
     console.warn('Firebase initialization skipped or failed:', err);
   }

@@ -1,24 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  User as FirebaseUser,
+} from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 import { Role, Employee } from '../types';
 import { INITIAL_EMPLOYEES } from '../lib/mockData';
 
-interface AuthUser {
+export interface AuthUser {
   uid: string;
   email: string;
   displayName: string;
   role: Role;
   employeeId: string;
-  avatarUrl: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   currentRole: Role;
   currentEmployee: Employee | null;
-  switchRole: (role: Role) => void;
-  switchEmployee: (employeeId: string) => void;
-  login: (email: string, role?: Role) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  authLoading: boolean;
+  authError: string | null;
   hasRole: (allowedRoles: Role[]) => boolean;
   canManageEmployees: boolean;
   canManagePayroll: boolean;
@@ -31,99 +39,121 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default administrative user: Super Admin (Yared Abegaz)
-  const [currentRole, setCurrentRole] = useState<Role>('Super Admin');
-  const [activeEmployeeId, setActiveEmployeeId] = useState<string>('EMP-1001');
-
-  const currentEmployee = INITIAL_EMPLOYEES.find((e) => e.employeeId === activeEmployeeId) || INITIAL_EMPLOYEES[0];
-
-  const [user, setUser] = useState<AuthUser | null>({
-    uid: 'user-admin-yared',
-    email: 'yared.abegaz@gmail.com',
-    displayName: 'Yared Abegaz',
-    role: 'Super Admin',
-    employeeId: 'EMP-1001',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      setUser({
-        ...user,
-        role: currentRole,
-        displayName: user.displayName,
-        email: user.email,
-        employeeId: activeEmployeeId,
-      });
+    if (!auth || !db) {
+      setAuthLoading(false);
+      return;
     }
-  }, [currentRole, activeEmployeeId]);
 
-  const switchRole = (newRole: Role) => {
-    setCurrentRole(newRole);
-    if (newRole === 'HR Manager') {
-      setActiveEmployeeId('EMP-1002');
-    } else {
-      setActiveEmployeeId('EMP-1001');
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      setAuthLoading(true);
+      setAuthError(null);
+
+      if (!firebaseUser) {
+        setUser(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userSnap = await getDoc(userDocRef);
+
+        if (!userSnap.exists()) {
+          await signOut(auth);
+          setUser(null);
+          setAuthError('Your account has not been granted access yet. Contact your Super Admin.');
+          setAuthLoading(false);
+          return;
+        }
+
+        const userData = userSnap.data();
+        if (!userData.role || (userData.role !== 'Super Admin' && userData.role !== 'HR Manager')) {
+          await signOut(auth);
+          setUser(null);
+          setAuthError('Your account has not been granted access yet. Contact your Super Admin.');
+          setAuthLoading(false);
+          return;
+        }
+
+        const empId = userData.employeeId || 'EMP-1001';
+        const employee = INITIAL_EMPLOYEES.find((e) => e.employeeId === empId) || null;
+
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: userData.displayName || firebaseUser.displayName || employee?.fullName || firebaseUser.email?.split('@')[0] || 'User',
+          role: userData.role as Role,
+          employeeId: empId,
+          avatarUrl: employee?.photoUrl || '',
+        });
+      } catch (err: any) {
+        console.error('Error fetching user permissions from Firestore:', err);
+        await signOut(auth);
+        setUser(null);
+        setAuthError('Failed to verify account permissions. Please try again.');
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<void> => {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized.');
+    }
+    setAuthError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err: any) {
+      let msg = 'Failed to sign in. Please check your credentials.';
+      if (
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/user-not-found' ||
+        err.code === 'auth/wrong-password'
+      ) {
+        msg = 'Invalid email address or password.';
+      } else if (err.code === 'auth/too-many-requests') {
+        msg = 'Too many failed login attempts. Please wait a few minutes and try again.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        msg = 'Email/Password sign-in is disabled in Firebase Auth. Enable Email/Password in Firebase Console.';
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setAuthError(msg);
+      throw new Error(msg);
     }
   };
 
-  const switchEmployee = (empId: string) => {
-    setActiveEmployeeId(empId);
-  };
-
-  const login = (email: string, role?: Role) => {
-    const cleanEmail = email.trim().toLowerCase();
-    
-    if (cleanEmail === 'yared.abegaz@gmail.com') {
-      setCurrentRole('Super Admin');
-      setActiveEmployeeId('EMP-1001');
-      setUser({
-        uid: 'user-admin-yared',
-        email: 'yared.abegaz@gmail.com',
-        displayName: 'Yared Abegaz',
-        role: 'Super Admin',
-        employeeId: 'EMP-1001',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-      });
-    } else if (cleanEmail === 'molla.yareds@gmail.com') {
-      setCurrentRole('HR Manager');
-      setActiveEmployeeId('EMP-1002');
-      setUser({
-        uid: 'user-hr-yared',
-        email: 'molla.yareds@gmail.com',
-        displayName: 'Yared Molla',
-        role: 'HR Manager',
-        employeeId: 'EMP-1002',
-        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
-      });
-    } else {
-      const adminRole: Role = role === 'HR Manager' ? 'HR Manager' : 'Super Admin';
-      setCurrentRole(adminRole);
-      setUser({
-        uid: 'user-' + Date.now(),
-        email: email,
-        displayName: email.split('@')[0],
-        role: adminRole,
-        employeeId: 'EMP-1001',
-        avatarUrl: '',
-      });
+  const logout = async (): Promise<void> => {
+    if (auth) {
+      await signOut(auth);
     }
-  };
-
-  const logout = () => {
     setUser(null);
+    setAuthError(null);
   };
+
+  const currentRole: Role = user?.role || 'Super Admin';
+  const currentEmployee: Employee | null = user
+    ? INITIAL_EMPLOYEES.find((e) => e.employeeId === user.employeeId) || INITIAL_EMPLOYEES[0]
+    : null;
 
   const hasRole = (allowedRoles: Role[]) => {
-    return allowedRoles.includes(currentRole);
+    return user ? allowedRoles.includes(user.role) : false;
   };
 
-  const canManageEmployees = true; // Super Admin & HR Manager
-  const canManagePayroll = true;   // Super Admin & HR Manager
-  const canApproveLeave = true;   // Super Admin & HR Manager
-  const canManageAssets = true;   // Super Admin & HR Manager
-  const canManageSettings = currentRole === 'Super Admin';
-  const isEmployeeViewOnly = false;
+  const canManageEmployees = user ? ['Super Admin', 'HR Manager'].includes(user.role) : false;
+  const canManagePayroll = user ? ['Super Admin', 'HR Manager'].includes(user.role) : false;
+  const canApproveLeave = user ? ['Super Admin', 'HR Manager'].includes(user.role) : false;
+  const canManageAssets = user ? ['Super Admin', 'HR Manager'].includes(user.role) : false;
+  const canManageSettings = user ? user.role === 'Super Admin' : false;
+  const isEmployeeViewOnly = user ? !['Super Admin', 'HR Manager'].includes(user.role) : true;
 
   return (
     <AuthContext.Provider
@@ -131,10 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         currentRole,
         currentEmployee,
-        switchRole,
-        switchEmployee,
         login,
         logout,
+        authLoading,
+        authError,
         hasRole,
         canManageEmployees,
         canManagePayroll,
@@ -156,4 +186,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

@@ -2,18 +2,108 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    // Default match for collections: allow read/write for authenticated app users
+    function getUserRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? getUserData().role
+        : null;
+    }
+
+    function isSuperAdmin() {
+      return getUserRole() == 'Super Admin';
+    }
+
+    function isHRManager() {
+      return getUserRole() == 'HR Manager';
+    }
+
+    function isStaffAdmin() {
+      return isSuperAdmin() || isHRManager();
+    }
+
+    // Users & Roles collection
+    match /users/{userId} {
+      // Users can read their own doc; Super Admins & HR Managers can read all user docs
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isStaffAdmin());
+      // Super Admin can create other users' docs, or an authenticated user can create their initial doc
+      allow create: if isAuthenticated() && (isSuperAdmin() || request.auth.uid == userId);
+      // Super Admin can update OTHER users' docs, but no user can update their own doc
+      allow update: if isSuperAdmin() && request.auth.uid != userId;
+      allow delete: if isSuperAdmin() && request.auth.uid != userId;
+    }
+
+    // Core HR collections (Super Admin & HR Manager)
+    match /employees/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /departments/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /positions/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /attendance/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /leaveRequests/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /performanceReviews/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /recruitment_jobs/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /recruitment_candidates/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /assets/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /announcements/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /notifications/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read, write: if isStaffAdmin();
+    }
+
+    // Payroll collection (Read: Super Admin or HR Manager; Write: Super Admin only)
+    match /payroll/{docId} {
+      allow read: if isStaffAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // Audit logs (Create: Super Admin or HR Manager; Update/Delete: never)
+    match /auditLogs/{docId} {
+      allow read: if isStaffAdmin();
+      allow create: if isStaffAdmin();
+      allow update, delete: if false;
+    }
+
+    // Default deny all other paths
     match /{document=**} {
-      allow read, write: if isAuthenticated() || true; // Allowed for dev/demo applet access
+      allow read, write: if false;
     }
   }
 }

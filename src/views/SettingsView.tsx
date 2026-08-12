@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Settings, ShieldCheck, Database, Lock, Users, Key, AlertCircle, RefreshCw } from 'lucide-react';
+import { Settings, ShieldCheck, Lock, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { Badge } from '../components/common/Badge';
 
 export const SettingsView: React.FC = () => {
-  const { currentRole, switchRole } = useAuth();
+  const { currentRole, user } = useAuth();
   const { auditLogs, seedInitialData } = useData();
 
   const [isSeeding, setIsSeeding] = useState(false);
@@ -23,10 +23,10 @@ export const SettingsView: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            System Governance & RBAC Controls
+            System Governance & Access Control
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Configure role permissions, view immutable audit trails, and manage data synchronization.
+            View active user permissions, audit trails, and manage database synchronization.
           </p>
         </div>
 
@@ -40,35 +40,25 @@ export const SettingsView: React.FC = () => {
         </button>
       </div>
 
-      {/* Role Matrix Card */}
+      {/* Role Display Card (Read-Only) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4">
         <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-indigo-500" />
-          Active Role-Based Access Control (RBAC)
+          Active Account Permissions
         </h2>
 
-        <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between">
+        <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs text-slate-500">Currently Acting As:</span>
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-base">{currentRole}</div>
+            <span className="text-xs text-slate-500">Authenticated Account:</span>
+            <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">{user?.email}</div>
+            <div className="text-xs text-slate-400">UID: <span className="font-mono text-[11px]">{user?.uid}</span></div>
           </div>
 
-          <div className="flex gap-2">
-            {(['Super Admin', 'HR Manager'] as const).map(
-              (r) => (
-                <button
-                  key={r}
-                  onClick={() => switchRole(r)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                    currentRole === r
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  {r === 'Super Admin' ? '👑 Super Admin / Owner' : '💼 HR Manager'}
-                </button>
-              )
-            )}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-semibold">Assigned Role:</span>
+            <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-xs">
+              {currentRole === 'Super Admin' ? '👑 Super Admin' : '💼 HR Manager'}
+            </span>
           </div>
         </div>
       </div>
