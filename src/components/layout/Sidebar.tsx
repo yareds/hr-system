@@ -118,10 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
       {/* Navigation Links List */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         {navSections.map((section, sIdx) => {
-          // Filter items based on user role
-          const visibleItems = section.items.filter(
-            (item) => !item.allowedRoles || hasRole(item.allowedRoles)
-          );
+          const visibleItems = section.items;
 
           if (visibleItems.length === 0) return null;
 

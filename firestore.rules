@@ -34,8 +34,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isStaffAdmin());
       // Super Admin can create other users' docs, or an authenticated user can create their initial doc
       allow create: if isAuthenticated() && (isSuperAdmin() || request.auth.uid == userId);
-      // Super Admin can update OTHER users' docs, but no user can update their own doc
-      allow update: if isSuperAdmin() && request.auth.uid != userId;
+      // Super Admin can update user docs, or an authenticated user can update their own doc
+      allow update: if isAuthenticated() && (isSuperAdmin() || request.auth.uid == userId);
       allow delete: if isSuperAdmin() && request.auth.uid != userId;
     }
 

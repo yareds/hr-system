@@ -4,8 +4,10 @@ import { Lock, Mail, AlertTriangle, Loader2, ArrowRight, ShieldCheck } from 'luc
 
 export const LoginView: React.FC = () => {
   const { login, authError } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -14,7 +16,7 @@ export const LoginView: React.FC = () => {
     setLocalError(null);
 
     if (!email.trim() || !password) {
-      setLocalError('Please enter both email and password.');
+      setLocalError('Please enter both email address and password.');
       return;
     }
 
@@ -22,7 +24,7 @@ export const LoginView: React.FC = () => {
     try {
       await login(email, password);
     } catch (err: any) {
-      // Error is set in AuthContext and caught here
+      // Error is handled in AuthContext / local state
     } finally {
       setIsSubmitting(false);
     }
@@ -37,10 +39,10 @@ export const LoginView: React.FC = () => {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-semibold">
             <ShieldCheck className="w-4 h-4" />
-            <span>Secure Authentication</span>
+            <span>Secure Enterprise Auth</span>
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Etex HRMS</h1>
-          <p className="text-xs text-slate-400">Enterprise Human Resource Management System</p>
+          <p className="text-xs text-slate-400">Human Resource Management & Governance System</p>
         </div>
 
         {/* Security Alert Banner */}
@@ -62,7 +64,7 @@ export const LoginView: React.FC = () => {
               <input
                 type="email"
                 required
-                placeholder="Enter your registered email"
+                placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
@@ -97,11 +99,11 @@ export const LoginView: React.FC = () => {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Authenticating...</span>
+                <span>Signing In...</span>
               </>
             ) : (
               <>
-                <span>Sign In to HRMS</span>
+                <span>Sign In to Etex HRMS</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
