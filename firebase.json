@@ -1,0 +1,15 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  },
+  "firestore": [
+    {
+      "database": "ai-studio-etexhrms-1516b0bc-c575-475d-9b25-d4a39e1cefae",
+      "rules": "firestore.rules"
+    }
+  ]
+}
