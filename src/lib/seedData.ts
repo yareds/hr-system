@@ -1,5 +1,5 @@
-import { collection, getDocs, doc, setDoc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase';
+import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
+import { db, auth } from './firebase';
 import {
   INITIAL_SETTINGS,
   INITIAL_DEPARTMENTS,
@@ -17,19 +17,38 @@ import {
   INITIAL_NOTIFICATIONS,
 } from './mockData';
 
-export async function checkAndSeedFirestore(): Promise<void> {
+export async function checkAndSeedFirestore(force: boolean = false): Promise<void> {
   if (!db) {
-    console.log('Firebase DB not initialized; using in-memory state.');
+    return;
+  }
+  if (!auth?.currentUser) {
+    // Unauthenticated user on login screen; local memory/storage state is used.
     return;
   }
   try {
     const empSnap = await getDocs(collection(db, 'employees'));
-    if (!empSnap.empty) {
-      console.log('Firestore already contains seed data.');
+    let needsSeed = empSnap.empty || force;
+
+    if (!needsSeed) {
+      // Check if any existing document contains old non-Ethiopian mock names or salaries > 100,000
+      const docsData = empSnap.docs.map((d) => d.data());
+      const hasOldNames = docsData.some(
+        (e: any) =>
+          e?.fullName?.includes('Sarah Jenkins') ||
+          e?.fullName?.includes('Elena Rostova') ||
+          e?.fullName?.includes('Michael Chang') ||
+          e?.fullName?.includes('Marcus Vance') ||
+          (typeof e?.salary === 'number' && e.salary > 100000)
+      );
+      if (hasOldNames) {
+        needsSeed = true;
+      }
+    }
+
+    if (!needsSeed) {
       return;
     }
 
-    console.log('Seeding Firestore collections with initial HRMS data...');
     const batch = writeBatch(db);
 
     // Settings
@@ -99,8 +118,7 @@ export async function checkAndSeedFirestore(): Promise<void> {
     }
 
     await batch.commit();
-    console.log('Firestore seeding completed successfully.');
   } catch (err) {
-    console.warn('Firestore seed notice (falling back to memory state if offline):', err);
+    // Silent catch for initial setup
   }
 }

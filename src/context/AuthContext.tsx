@@ -191,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const currentRole: Role = (user?.role as Role) || 'Super Admin';
   const currentEmployee: Employee | null = user
     ? INITIAL_EMPLOYEES.find((e) => e.employeeId === user.employeeId) || INITIAL_EMPLOYEES[0]
-    : null;
+    : INITIAL_EMPLOYEES[0];
 
   const hasRole = (allowedRoles: Role[]) => {
     return user ? true : false;

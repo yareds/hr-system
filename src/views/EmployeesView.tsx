@@ -49,7 +49,7 @@ export const EmployeesView: React.FC = () => {
     phone: '',
     department: 'Engineering',
     position: 'Software Engineer',
-    salary: 110000,
+    salary: 65000,
     hireDate: new Date().toISOString().split('T')[0],
     employmentType: 'Full-Time',
     payType: 'Salary',
@@ -57,12 +57,13 @@ export const EmployeesView: React.FC = () => {
   });
 
   // Filter Logic
-  const filteredEmployees = employees.filter((e) => {
+  const filteredEmployees = (employees || []).filter((e) => {
+    if (!e) return false;
     const matchesQuery =
-      e.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.email.toLowerCase().includes(searchQuery.toLowerCase());
+      (e.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.employeeId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.position || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.email || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesDept = selectedDept === 'ALL' || e.department === selectedDept;
     const matchesStatus = selectedStatus === 'ALL' || e.employmentStatus === selectedStatus;
@@ -81,7 +82,7 @@ export const EmployeesView: React.FC = () => {
       phone: '',
       department: 'Engineering',
       position: 'Software Engineer',
-      salary: 110000,
+      salary: 65000,
       hireDate: new Date().toISOString().split('T')[0],
       employmentType: 'Full-Time',
       payType: 'Salary',
@@ -229,7 +230,7 @@ export const EmployeesView: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{emp.employmentType} • Salary: ${emp.salary.toLocaleString()}/yr</span>
+                  <span>{emp.employmentType} • Salary: {emp.salary.toLocaleString()} Birr/mo</span>
                 </div>
               </div>
             </div>
@@ -249,7 +250,7 @@ export const EmployeesView: React.FC = () => {
                   <th className="p-3">Department</th>
                   <th className="p-3">Position</th>
                   <th className="p-3">Status</th>
-                  <th className="p-3">Salary</th>
+                  <th className="p-3">Salary (ETB)</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
@@ -271,7 +272,7 @@ export const EmployeesView: React.FC = () => {
                     <td className="p-3">{emp.department}</td>
                     <td className="p-3">{emp.position}</td>
                     <td className="p-3">{getStatusBadge(emp.employmentStatus)}</td>
-                    <td className="p-3 font-mono">${emp.salary.toLocaleString()}</td>
+                    <td className="p-3 font-mono font-medium">{emp.salary.toLocaleString()} Birr</td>
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => setSelectedEmployee(emp)}
@@ -430,9 +431,9 @@ export const EmployeesView: React.FC = () => {
 
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg space-y-2">
                   <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1">Tax Setup</div>
-                  <div>Tax ID / SSN: {selectedEmployee.taxInfo?.taxId}</div>
+                  <div>Tax ID / TIN: {selectedEmployee.taxInfo?.taxId}</div>
                   <div>Filing Status: {selectedEmployee.taxInfo?.filingStatus}</div>
-                  <div>Annual Salary: ${selectedEmployee.salary.toLocaleString()}</div>
+                  <div>Monthly Base Salary: {selectedEmployee.salary.toLocaleString()} Birr (ETB)</div>
                 </div>
               </div>
             )}
@@ -578,14 +579,18 @@ export const EmployeesView: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Annual Salary ($)</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Monthly Salary (Birr / ETB) *</label>
               <input
                 type="number"
                 required
+                min={1000}
+                max={99999}
+                placeholder="e.g. 65000"
                 value={newEmpForm.salary}
                 onChange={(e) => setNewEmpForm({ ...newEmpForm, salary: Number(e.target.value) })}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
               />
+              <p className="text-[10px] text-slate-400 mt-0.5">Range: 1,000 – 99,999 Birr/mo</p>
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Hire Date</label>

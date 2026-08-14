@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Briefcase, UserPlus, MapPin, DollarSign, Plus, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { Briefcase, UserPlus, MapPin, Banknote, Plus, Eye, CheckCircle2, XCircle } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Badge } from '../components/common/Badge';
 
 export const RecruitmentView: React.FC = () => {
-  const { jobs, applicants } = useData();
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(jobs[0]?.id || null);
+  const { jobs = [], candidates: applicants = [] } = useData();
+  const safeJobs = jobs || [];
+  const safeApplicants = applicants || [];
 
-  const activeJob = jobs.find((j) => j.id === selectedJobId) || jobs[0];
-  const jobApplicants = applicants.filter((a) => a.jobId === activeJob?.id);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(safeJobs[0]?.id || null);
+
+  const activeJob = safeJobs.find((j) => j.id === selectedJobId) || safeJobs[0];
+  const jobApplicants = safeApplicants.filter((a) => a.jobId === activeJob?.id);
 
   return (
     <div className="space-y-6">
@@ -34,12 +37,12 @@ export const RecruitmentView: React.FC = () => {
         {/* Jobs Requisitions List */}
         <div className="space-y-3">
           <h2 className="font-bold text-slate-900 dark:text-slate-100 text-xs uppercase tracking-wider text-slate-500">
-            Open Requisitions ({jobs.length})
+            Open Requisitions ({safeJobs.length})
           </h2>
 
-          {jobs.map((job) => {
+          {safeJobs.map((job) => {
             const isSelected = job.id === activeJob?.id;
-            const count = applicants.filter((a) => a.jobId === job.id).length;
+            const count = safeApplicants.filter((a) => a.jobId === job.id).length;
 
             return (
               <div
@@ -61,7 +64,7 @@ export const RecruitmentView: React.FC = () => {
                     <MapPin className="w-3 h-3 text-slate-400" /> {job.location}
                   </span>
                   <span className="flex items-center gap-1 font-mono">
-                    <DollarSign className="w-3 h-3 text-slate-400" /> {job.salaryRange}
+                    <Banknote className="w-3 h-3 text-slate-400" /> {job.salaryRange || 'ETB 45,000 - 70,000 / mo'}
                   </span>
                 </div>
 

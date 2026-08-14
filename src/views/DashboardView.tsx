@@ -47,32 +47,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   const { currentEmployee, currentRole, canApproveLeave, canManagePayroll, canManageEmployees } = useAuth();
 
   // Metrics
-  const activeEmployees = employees.filter((e) => e.employmentStatus === 'Active');
-  const totalCount = employees.length;
-  const onLeaveCount = employees.filter((e) => e.employmentStatus === 'On Leave').length;
+  const safeEmployees = employees || [];
+  const safeAttendance = attendance || [];
+  const safeLeaveRequests = leaveRequests || [];
+  const safePayslips = payslips || [];
+
+  const activeEmployees = safeEmployees.filter((e) => e?.employmentStatus === 'Active');
+  const totalCount = safeEmployees.length;
+  const onLeaveCount = safeEmployees.filter((e) => e?.employmentStatus === 'On Leave').length;
   
   // New hires in last 6 months
-  const newHiresCount = employees.filter((e) => {
+  const newHiresCount = safeEmployees.filter((e) => {
+    if (!e?.hireDate) return false;
     const hireDate = new Date(e.hireDate);
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     return hireDate >= sixMonthsAgo;
   }).length;
 
-  const pendingLeaves = leaveRequests.filter((l) => l.status === 'Pending');
+  const pendingLeaves = safeLeaveRequests.filter((l) => l?.status === 'Pending');
 
   // Attendance summary for today
-  const presentCount = attendance.filter((a) => a.status === 'Present').length;
-  const lateCount = attendance.filter((a) => a.status === 'Late').length;
+  const presentCount = safeAttendance.filter((a) => a?.status === 'Present').length;
+  const lateCount = safeAttendance.filter((a) => a?.status === 'Late').length;
   const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 100;
 
   // Monthly Payroll total sum
-  const latestPayrollSum = payslips.reduce((acc, p) => acc + p.grossPay, 0);
+  const latestPayrollSum = safePayslips.reduce((acc, p) => acc + (p?.grossPay || 0), 0);
 
   // Department Headcount Chart Data
   const deptMap: Record<string, number> = {};
-  employees.forEach((e) => {
-    deptMap[e.department] = (deptMap[e.department] || 0) + 1;
+  safeEmployees.forEach((e) => {
+    if (e?.department) {
+      deptMap[e.department] = (deptMap[e.department] || 0) + 1;
+    }
   });
   const deptData = Object.entries(deptMap).map(([name, count]) => ({ name, count }));
 
@@ -84,13 +92,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   ];
 
   // Upcoming Birthdays (August simulated current month)
-  const upcomingBirthdays = employees.filter((e) => {
+  const upcomingBirthdays = safeEmployees.filter((e) => {
+    if (!e?.dateOfBirth) return false;
     const dob = new Date(e.dateOfBirth);
     return dob.getMonth() === 7; // August
   });
 
   // Upcoming Anniversaries
-  const upcomingAnniversaries = employees.filter((e) => {
+  const upcomingAnniversaries = safeEmployees.filter((e) => {
+    if (!e?.hireDate) return false;
     const hire = new Date(e.hireDate);
     return hire.getMonth() === 7;
   });
@@ -105,7 +115,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             Executive HR Dashboard • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1 tracking-tight">
-            Welcome back, {currentEmployee?.firstName || 'Sarah'}!
+            Welcome back, {currentEmployee?.firstName || 'Sara'}!
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
             You are managing <span className="font-semibold text-white">{activeEmployees.length} active employees</span> across 5 departments with an overall workforce attendance rate of <span className="font-semibold text-emerald-400">{attendanceRate}%</span>.
@@ -168,7 +178,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         />
         <StatCard
           title="Monthly Gross Payroll"
-          value={`$${Math.round(latestPayrollSum).toLocaleString()}`}
+          value={`ETB ${Math.round(latestPayrollSum).toLocaleString()}`}
           subtitle="Last completed payroll run"
           icon={<DollarSign className="w-5 h-5 text-sky-600 dark:text-sky-400" />}
           iconBgColor="bg-sky-50 dark:bg-sky-950/40"

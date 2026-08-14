@@ -30,8 +30,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
   const { leaveRequests, jobs } = useData();
   const [collapsed, setCollapsed] = useState(false);
 
-  const pendingLeavesCount = leaveRequests.filter((l) => l.status === 'Pending').length;
-  const openJobsCount = jobs.filter((j) => j.status === 'Open').length;
+  const pendingLeavesCount = (leaveRequests || []).filter((l) => l?.status === 'Pending').length;
+  const openJobsCount = (jobs || []).filter((j) => j?.status === 'Open').length;
 
   interface NavItem {
     id: string;

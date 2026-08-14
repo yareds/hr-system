@@ -21,7 +21,8 @@ import { Payslip } from '../types';
 import { ETHIOPIAN_INCOME_TAX_BRACKETS, calculateEthiopianIncomeTax } from '../lib/taxUtils';
 
 export const PayrollView: React.FC = () => {
-  const { payslips, employees, runPayroll } = useData();
+  const { payslips = [], employees = [], runPayroll } = useData();
+  const safePayslips = payslips || [];
   const { canManagePayroll } = useAuth();
 
   const [selectedMonth, setSelectedMonth] = useState('2026-08');
@@ -38,15 +39,15 @@ export const PayrollView: React.FC = () => {
   const [payrollSuccessMsg, setPayrollSuccessMsg] = useState<string | null>(null);
 
   // Total metrics
-  const totalGross = payslips.reduce((acc, p) => acc + p.grossPay, 0);
-  const totalNet = payslips.reduce((acc, p) => acc + p.netPay, 0);
-  const totalDeductions = payslips.reduce((acc, p) => acc + p.taxDeductions, 0);
+  const totalGross = safePayslips.reduce((acc, p) => acc + (p?.grossPay || 0), 0);
+  const totalNet = safePayslips.reduce((acc, p) => acc + (p?.netPay || 0), 0);
+  const totalDeductions = safePayslips.reduce((acc, p) => acc + (p?.taxDeductions || 0), 0);
 
-  const filteredPayslips = payslips.filter(
+  const filteredPayslips = safePayslips.filter(
     (p) =>
-      p.payPeriod === selectedMonth &&
-      (p.employeeName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        p.department.toLowerCase().includes(searchFilter.toLowerCase()))
+      (p?.periodStart?.startsWith(selectedMonth) || (p as any)?.payPeriod === selectedMonth) &&
+      ((p?.employeeName || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (p?.department || '').toLowerCase().includes(searchFilter.toLowerCase()))
   );
 
   const handleViewPayslip = (p: Payslip) => {
@@ -271,51 +272,59 @@ export const PayrollView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredPayslips.map((p) => {
-                const emp = employees.find((e) => e.id === p.employeeId);
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src={emp?.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                          alt={p.employeeName}
-                          className="w-7 h-7 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-                        />
-                        <div>
-                          <div className="font-semibold text-slate-900 dark:text-slate-100">{p.employeeName}</div>
-                          <div className="text-[10px] text-slate-400">{emp?.designation || 'Staff'}</div>
+              {filteredPayslips.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+                    No payslips found for {selectedMonth}. Click <span className="font-semibold text-emerald-600 dark:text-emerald-400">"Run Monthly Payroll"</span> above to generate payslips for this period.
+                  </td>
+                </tr>
+              ) : (
+                filteredPayslips.map((p) => {
+                  const emp = employees.find((e) => e.id === p.employeeId || e.employeeId === p.employeeId);
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={emp?.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                            alt={p.employeeName}
+                            className="w-7 h-7 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-900 dark:text-slate-100">{p.employeeName}</div>
+                            <div className="text-[10px] text-slate-400">{emp?.position || 'Staff'}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3.5 font-medium">{p.department}</td>
-                    <td className="p-3.5 font-mono">ETB {p.basicSalary.toLocaleString()}</td>
-                    <td className="p-3.5 font-mono text-emerald-600 dark:text-emerald-400">
-                      +ETB {p.allowances.toLocaleString()}
-                    </td>
-                    <td className="p-3.5 font-mono text-rose-600 dark:text-rose-400">
-                      -ETB {p.taxDeductions.toLocaleString()}
-                    </td>
-                    <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">
-                      ETB {p.netPay.toLocaleString()}
-                    </td>
-                    <td className="p-3.5">
-                      <Badge variant="success">
-                        <CheckCircle2 className="w-3 h-3 mr-1 inline" /> Paid
-                      </Badge>
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => handleViewPayslip(p)}
-                        className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 rounded-md font-semibold text-[11px] transition-colors inline-flex items-center gap-1 border border-indigo-200/60 dark:border-indigo-800/60"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        Payslip PDF
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="p-3.5 font-medium">{p.department}</td>
+                      <td className="p-3.5 font-mono">ETB {(p.baseSalary || p.grossPay || 0).toLocaleString()}</td>
+                      <td className="p-3.5 font-mono text-emerald-600 dark:text-emerald-400">
+                        +ETB {(p.allowances || 0).toLocaleString()}
+                      </td>
+                      <td className="p-3.5 font-mono text-rose-600 dark:text-rose-400">
+                        -ETB {(p.taxDeductions || 0).toLocaleString()}
+                      </td>
+                      <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">
+                        ETB {(p.netPay || 0).toLocaleString()}
+                      </td>
+                      <td className="p-3.5">
+                        <Badge variant="success">
+                          <CheckCircle2 className="w-3 h-3 mr-1 inline" /> Paid
+                        </Badge>
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <button
+                          onClick={() => handleViewPayslip(p)}
+                          className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 rounded-md font-semibold text-[11px] transition-colors inline-flex items-center gap-1 border border-indigo-200/60 dark:border-indigo-800/60"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          Payslip PDF
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

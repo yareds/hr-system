@@ -31,7 +31,7 @@ export const PayslipPDFModal: React.FC<PayslipPDFModalProps> = ({
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(settings.address || 'San Francisco, CA', 14, 26);
+    doc.text(settings.address || 'Bole Sub-City, Addis Ababa, Ethiopia', 14, 26);
     doc.text(`Tax ID: ${settings.taxId}`, 14, 31);
 
     // Title

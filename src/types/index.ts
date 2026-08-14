@@ -198,6 +198,7 @@ export interface JobOpening {
   location: string;
   employmentType: EmploymentType;
   status: 'Draft' | 'Open' | 'Interviewing' | 'Closed';
+  salaryRange?: string;
   applicantsCount: number;
   description: string;
   requirements: string[];

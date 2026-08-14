@@ -3,24 +3,27 @@ import { BarChart3, Download, FileSpreadsheet, FileText, PieChart, Users, Dollar
 import { useData } from '../context/DataContext';
 
 export const ReportsView: React.FC = () => {
-  const { employees, payslips, leaveRequests } = useData();
+  const { employees = [], payslips = [], leaveRequests = [] } = useData();
+  const safeEmployees = employees || [];
+  const safePayslips = payslips || [];
+  const safeLeaveRequests = leaveRequests || [];
 
   const handleDownloadCSV = (reportName: string) => {
     let csvContent = 'data:text/csv;charset=utf-8,';
     if (reportName === 'Headcount') {
       csvContent += 'Employee ID,Full Name,Email,Department,Designation,Status\n';
-      employees.forEach((e) => {
-        csvContent += `${e.employeeId},"${e.fullName}",${e.email},${e.department},${e.designation},${e.employmentStatus}\n`;
+      safeEmployees.forEach((e) => {
+        csvContent += `${e?.employeeId || ''},"${e?.fullName || ''}",${e?.email || ''},${e?.department || ''},${e?.position || ''},${e?.employmentStatus || ''}\n`;
       });
     } else if (reportName === 'Payroll') {
       csvContent += 'Employee Name,Department,Pay Period,Basic Salary,Allowances,Deductions,Net Pay\n';
-      payslips.forEach((p) => {
-        csvContent += `"${p.employeeName}",${p.department},${p.payPeriod},${p.basicSalary},${p.allowances},${p.taxDeductions},${p.netPay}\n`;
+      safePayslips.forEach((p) => {
+        csvContent += `"${p?.employeeName || ''}",${p?.department || ''},${p?.payPeriod || ''},${p?.basicSalary || 0},${p?.allowances || 0},${p?.taxDeductions || 0},${p?.netPay || 0}\n`;
       });
     } else {
       csvContent += 'Employee Name,Department,Leave Type,Start Date,End Date,Days,Status\n';
-      leaveRequests.forEach((l) => {
-        csvContent += `"${l.employeeName}",${l.department},${l.leaveType},${l.startDate},${l.endDate},${l.totalDays},${l.status}\n`;
+      safeLeaveRequests.forEach((l) => {
+        csvContent += `"${l?.employeeName || ''}",${l?.department || ''},${l?.leaveType || ''},${l?.startDate || ''},${l?.endDate || ''},${l?.totalDays || 0},${l?.status || ''}\n`;
       });
     }
 

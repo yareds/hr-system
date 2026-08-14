@@ -27,7 +27,7 @@ export const OrganizationView: React.FC = () => {
     name: '',
     code: '',
     costCenter: 'CC-106',
-    location: 'HQ - San Francisco',
+    location: 'HQ - Addis Ababa',
     description: '',
   });
 
@@ -35,7 +35,7 @@ export const OrganizationView: React.FC = () => {
     e.preventDefault();
     addDepartment(newDept);
     setIsDeptModalOpen(false);
-    setNewDept({ name: '', code: '', costCenter: 'CC-106', location: 'HQ - San Francisco', description: '' });
+    setNewDept({ name: '', code: '', costCenter: 'CC-106', location: 'HQ - Addis Ababa', description: '' });
   };
 
   return (
@@ -99,8 +99,8 @@ export const OrganizationView: React.FC = () => {
       {/* Tab: Departments */}
       {activeTab === 'departments' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {departments.map((dept) => {
-            const empCount = employees.filter((e) => e.department === dept.name).length;
+          {(departments || []).map((dept) => {
+            const empCount = (employees || []).filter((e) => e?.department === dept.name).length;
             return (
               <div
                 key={dept.id}
@@ -169,11 +169,11 @@ export const OrganizationView: React.FC = () => {
             <p className="text-xs text-slate-400">Reporting structure from Executive Leadership down to Department Leads</p>
           </div>
 
-          {/* Root Level: HR Director & VP of Engineering */}
+          {/* Root Level: VP of Engineering */}
           <div className="flex flex-col items-center space-y-8">
             <div className="p-4 bg-indigo-50 dark:bg-indigo-950/60 border-2 border-indigo-500 rounded-xl shadow-md text-center max-w-sm w-full">
               <Badge variant="purple">Executive Leadership</Badge>
-              <div className="font-bold text-slate-900 dark:text-slate-100 mt-1">Elena Rostova</div>
+              <div className="font-bold text-slate-900 dark:text-slate-100 mt-1">Eleni Moges</div>
               <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">VP of Engineering</div>
               <div className="text-[10px] text-slate-400 mt-1">Reports directly to CEO</div>
             </div>
@@ -184,17 +184,17 @@ export const OrganizationView: React.FC = () => {
             {/* Department Managers */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
               <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center space-y-1">
-                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Sarah Jenkins</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Sara Belay</div>
                 <div className="text-[11px] text-slate-500">HR Director</div>
                 <Badge variant="info">Human Resources</Badge>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center space-y-1">
-                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Marcus Vance</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Hanna Yohannes</div>
                 <div className="text-[11px] text-slate-500">Sales Manager</div>
                 <Badge variant="success">Sales & Marketing</Badge>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center space-y-1">
-                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Alex Thorne</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">Tewodros Assefa</div>
                 <div className="text-[11px] text-slate-500">Lead Designer</div>
                 <Badge variant="primary">Product & Design</Badge>
               </div>

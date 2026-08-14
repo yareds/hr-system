@@ -4,8 +4,31 @@ import { useData } from '../context/DataContext';
 import { Badge } from '../components/common/Badge';
 
 export const PerformanceView: React.FC = () => {
-  const { performanceReviews, goals, employees } = useData();
+  const { performanceReviews = [], employees = [] } = useData();
+  const safeReviews = performanceReviews || [];
+  const safeEmployees = employees || [];
   const [activeTab, setActiveTab] = useState<'reviews' | 'okrs'>('reviews');
+
+  const goals = [
+    {
+      id: 'g-1',
+      title: 'Migrate Core Infrastructure to Cloud Native',
+      employeeName: 'Eleni Moges',
+      dueDate: '2026-09-30',
+      status: 'In Progress',
+      description: 'Zero-downtime migration of internal HR & payroll services with sub-second response times.',
+      progress: 75,
+    },
+    {
+      id: 'g-2',
+      title: 'Automate Ethiopian Income Tax & Pension Compliance',
+      employeeName: 'Sara Belay',
+      dueDate: '2026-08-31',
+      status: 'Completed',
+      description: 'Implement automated 7-tier tax withholding rules and downloadable payslip PDFs.',
+      progress: 100,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -55,8 +78,8 @@ export const PerformanceView: React.FC = () => {
       {activeTab === 'reviews' ? (
         /* Performance Reviews Cards Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {performanceReviews.map((rev) => {
-            const emp = employees.find((e) => e.id === rev.employeeId);
+          {safeReviews.map((rev) => {
+            const emp = safeEmployees.find((e) => e.id === rev.employeeId);
             return (
               <div
                 key={rev.id}

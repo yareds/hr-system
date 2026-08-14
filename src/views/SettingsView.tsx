@@ -89,7 +89,7 @@ export const SettingsView: React.FC = () => {
                   <td className="p-3.5 font-mono text-slate-500">
                     {new Date(log.timestamp).toLocaleString()}
                   </td>
-                  <td className="p-3.5 font-semibold text-slate-900 dark:text-slate-100">{log.performedBy}</td>
+                  <td className="p-3.5 font-semibold text-slate-900 dark:text-slate-100">{log.userName || (log as any).performedBy || 'System User'}</td>
                   <td className="p-3.5">
                     <Badge variant={log.action.includes('Delete') ? 'danger' : 'info'}>{log.action}</Badge>
                   </td>

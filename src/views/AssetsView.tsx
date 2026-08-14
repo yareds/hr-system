@@ -4,10 +4,11 @@ import { useData } from '../context/DataContext';
 import { Badge } from '../components/common/Badge';
 
 export const AssetsView: React.FC = () => {
-  const { assets } = useData();
+  const { assets = [] } = useData();
+  const safeAssets = assets || [];
 
-  const assignedCount = assets.filter((a) => a.status === 'Assigned').length;
-  const inStockCount = assets.filter((a) => a.status === 'In Stock').length;
+  const assignedCount = safeAssets.filter((a) => a?.status === 'Assigned').length;
+  const inStockCount = safeAssets.filter((a) => a?.status === 'In Stock').length;
 
   return (
     <div className="space-y-6">

@@ -14,7 +14,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   onSelectResult,
 }) => {
   const [query, setQuery] = useState('');
-  const { employees, departments, payslips, leaveRequests } = useData();
+  const { employees = [], departments = [], payslips = [], leaveRequests = [] } = useData();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,37 +35,37 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const q = query.toLowerCase().trim();
 
   const filteredEmployees = q
-    ? employees.filter(
+    ? (employees || []).filter(
         (e) =>
-          e.fullName.toLowerCase().includes(q) ||
-          e.employeeId.toLowerCase().includes(q) ||
-          e.department.toLowerCase().includes(q) ||
-          e.position.toLowerCase().includes(q) ||
-          e.email.toLowerCase().includes(q)
+          e?.fullName?.toLowerCase().includes(q) ||
+          e?.employeeId?.toLowerCase().includes(q) ||
+          e?.department?.toLowerCase().includes(q) ||
+          e?.position?.toLowerCase().includes(q) ||
+          e?.email?.toLowerCase().includes(q)
       ).slice(0, 5)
     : [];
 
   const filteredDepts = q
-    ? departments.filter(
-        (d) => d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q)
+    ? (departments || []).filter(
+        (d) => d?.name?.toLowerCase().includes(q) || d?.code?.toLowerCase().includes(q)
       ).slice(0, 3)
     : [];
 
   const filteredPayslips = q
-    ? payslips.filter(
+    ? (payslips || []).filter(
         (p) =>
-          p.employeeName.toLowerCase().includes(q) ||
-          p.employeeId.toLowerCase().includes(q) ||
-          p.periodStart.includes(q)
+          p?.employeeName?.toLowerCase().includes(q) ||
+          p?.employeeId?.toLowerCase().includes(q) ||
+          p?.periodStart?.includes(q)
       ).slice(0, 3)
     : [];
 
   const filteredLeaves = q
-    ? leaveRequests.filter(
+    ? (leaveRequests || []).filter(
         (l) =>
-          l.employeeName.toLowerCase().includes(q) ||
-          l.leaveType.toLowerCase().includes(q) ||
-          l.status.toLowerCase().includes(q)
+          l?.employeeName?.toLowerCase().includes(q) ||
+          l?.leaveType?.toLowerCase().includes(q) ||
+          l?.status?.toLowerCase().includes(q)
       ).slice(0, 3)
     : [];
 
@@ -83,7 +83,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search employees, departments, payslips, leaves... (e.g. 'Sarah', 'ENG', 'Payroll')"
+            placeholder="Search employees, departments, payslips, leaves... (e.g. 'Sara', 'ENG', 'Payroll')"
             className="w-full bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none"
             autoFocus
           />
@@ -201,7 +201,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         {p.employeeName} - {p.periodStart} to {p.periodEnd}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
-                        Net Pay: ${p.netPay.toLocaleString()}
+                        Net Pay: ETB {p.netPay.toLocaleString()}
                       </div>
                     </div>
                     <FileText className="w-4 h-4 text-slate-400" />

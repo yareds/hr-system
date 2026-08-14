@@ -94,82 +94,100 @@ interface DataContextType {
 
   updateSettings: (newSettings: Partial<CompanySettings>) => void;
   logAction: (userName: string, userRole: any, action: string, module: string, details: string) => void;
+  seedInitialData: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+const HRMS_DATA_VERSION_KEY = 'hrms_data_schema_version';
+const CURRENT_DATA_VERSION = 'v2026_etex_salaries_under_100k_v4';
+
+// Check if localStorage contains outdated non-Ethiopian names, legacy salaries > 100,000 or older schema version
+const checkAndMigrateLocalStorage = () => {
+  try {
+    const version = localStorage.getItem(HRMS_DATA_VERSION_KEY);
+    const rawEmps = localStorage.getItem('hrms_employees') || '';
+    const hasOldNames =
+      rawEmps.includes('Sarah Jenkins') ||
+      rawEmps.includes('Elena Rostova') ||
+      rawEmps.includes('Michael Chang') ||
+      rawEmps.includes('San Francisco') ||
+      rawEmps.includes('Marcus Vance');
+
+    let hasHighSalary = false;
+    try {
+      const parsed = JSON.parse(rawEmps);
+      if (Array.isArray(parsed) && parsed.some((e: any) => e.salary > 100000)) {
+        hasHighSalary = true;
+      }
+    } catch {}
+
+    if (version !== CURRENT_DATA_VERSION || hasOldNames || hasHighSalary) {
+      localStorage.setItem(HRMS_DATA_VERSION_KEY, CURRENT_DATA_VERSION);
+      localStorage.setItem('hrms_employees', JSON.stringify(INITIAL_EMPLOYEES));
+      localStorage.setItem('hrms_departments', JSON.stringify(INITIAL_DEPARTMENTS));
+      localStorage.setItem('hrms_positions', JSON.stringify(INITIAL_POSITIONS));
+      localStorage.setItem('hrms_attendance', JSON.stringify(INITIAL_ATTENDANCE));
+      localStorage.setItem('hrms_leave', JSON.stringify(INITIAL_LEAVE_REQUESTS));
+      localStorage.setItem('hrms_payslips', JSON.stringify(INITIAL_PAYSLIPS));
+      localStorage.setItem('hrms_reviews', JSON.stringify(INITIAL_PERFORMANCE_REVIEWS));
+      localStorage.setItem('hrms_jobs', JSON.stringify(INITIAL_JOBS));
+      localStorage.setItem('hrms_candidates', JSON.stringify(INITIAL_CANDIDATES));
+      localStorage.setItem('hrms_assets', JSON.stringify(INITIAL_ASSETS));
+      localStorage.setItem('hrms_announcements', JSON.stringify(INITIAL_ANNOUNCEMENTS));
+      localStorage.setItem('hrms_audit_logs', JSON.stringify(INITIAL_AUDIT_LOGS));
+      localStorage.setItem('hrms_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
+      localStorage.setItem('hrms_settings', JSON.stringify(INITIAL_SETTINGS));
+    }
+  } catch (e) {
+    console.warn('Storage migration skipped:', e);
+  }
+};
+
+// Run migration immediately
+if (typeof window !== 'undefined') {
+  checkAndMigrateLocalStorage();
+}
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
+  // Helper to safely load array state from localStorage
+  const safeParseArray = <T,>(key: string, fallback: T[]): T[] => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (!saved) return fallback;
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   // State initialization with localStorage or default mockData
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem('hrms_employees');
-    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
-  });
-
-  const [departments, setDepartments] = useState<Department[]>(() => {
-    const saved = localStorage.getItem('hrms_departments');
-    return saved ? JSON.parse(saved) : INITIAL_DEPARTMENTS;
-  });
-
-  const [positions, setPositions] = useState<Position[]>(() => {
-    const saved = localStorage.getItem('hrms_positions');
-    return saved ? JSON.parse(saved) : INITIAL_POSITIONS;
-  });
-
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem('hrms_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
-  });
-
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => {
-    const saved = localStorage.getItem('hrms_leave');
-    return saved ? JSON.parse(saved) : INITIAL_LEAVE_REQUESTS;
-  });
-
-  const [payslips, setPayslips] = useState<Payslip[]>(() => {
-    const saved = localStorage.getItem('hrms_payslips');
-    return saved ? JSON.parse(saved) : INITIAL_PAYSLIPS;
-  });
-
-  const [performanceReviews, setPerformanceReviews] = useState<PerformanceReview[]>(() => {
-    const saved = localStorage.getItem('hrms_reviews');
-    return saved ? JSON.parse(saved) : INITIAL_PERFORMANCE_REVIEWS;
-  });
-
-  const [jobs, setJobs] = useState<JobOpening[]>(() => {
-    const saved = localStorage.getItem('hrms_jobs');
-    return saved ? JSON.parse(saved) : INITIAL_JOBS;
-  });
-
-  const [candidates, setCandidates] = useState<Candidate[]>(() => {
-    const saved = localStorage.getItem('hrms_candidates');
-    return saved ? JSON.parse(saved) : INITIAL_CANDIDATES;
-  });
-
-  const [assets, setAssets] = useState<Asset[]>(() => {
-    const saved = localStorage.getItem('hrms_assets');
-    return saved ? JSON.parse(saved) : INITIAL_ASSETS;
-  });
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    const saved = localStorage.getItem('hrms_announcements');
-    return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
-  });
-
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
-    const saved = localStorage.getItem('hrms_audit_logs');
-    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
-  });
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    const saved = localStorage.getItem('hrms_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
-  });
+  const [employees, setEmployees] = useState<Employee[]>(() => safeParseArray('hrms_employees', INITIAL_EMPLOYEES));
+  const [departments, setDepartments] = useState<Department[]>(() => safeParseArray('hrms_departments', INITIAL_DEPARTMENTS));
+  const [positions, setPositions] = useState<Position[]>(() => safeParseArray('hrms_positions', INITIAL_POSITIONS));
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => safeParseArray('hrms_attendance', INITIAL_ATTENDANCE));
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => safeParseArray('hrms_leave', INITIAL_LEAVE_REQUESTS));
+  const [payslips, setPayslips] = useState<Payslip[]>(() => safeParseArray('hrms_payslips', INITIAL_PAYSLIPS));
+  const [performanceReviews, setPerformanceReviews] = useState<PerformanceReview[]>(() => safeParseArray('hrms_reviews', INITIAL_PERFORMANCE_REVIEWS));
+  const [jobs, setJobs] = useState<JobOpening[]>(() => safeParseArray('hrms_jobs', INITIAL_JOBS));
+  const [candidates, setCandidates] = useState<Candidate[]>(() => safeParseArray('hrms_candidates', INITIAL_CANDIDATES));
+  const [assets, setAssets] = useState<Asset[]>(() => safeParseArray('hrms_assets', INITIAL_ASSETS));
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => safeParseArray('hrms_announcements', INITIAL_ANNOUNCEMENTS));
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => safeParseArray('hrms_audit_logs', INITIAL_AUDIT_LOGS));
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => safeParseArray('hrms_notifications', INITIAL_NOTIFICATIONS));
 
   const [settings, setSettings] = useState<CompanySettings>(() => {
-    const saved = localStorage.getItem('hrms_settings');
-    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+    try {
+      const saved = localStorage.getItem('hrms_settings');
+      if (!saved) return INITIAL_SETTINGS;
+      const parsed = JSON.parse(saved);
+      return parsed && typeof parsed === 'object' ? parsed : INITIAL_SETTINGS;
+    } catch {
+      return INITIAL_SETTINGS;
+    }
   });
 
   // Sync state to local storage
@@ -258,13 +276,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       firstName: empData.firstName || 'New',
       lastName: empData.lastName || 'Employee',
       fullName: `${empData.firstName || 'New'} ${empData.lastName || 'Employee'}`,
-      email: empData.email || `emp.${Date.now()}@apex.com`,
-      phone: empData.phone || '+1 (415) 555-0000',
+      email: empData.email || `emp.${Date.now()}@etex.com`,
+      phone: empData.phone || '+251 91 100 0000',
       gender: empData.gender || 'Other',
       dateOfBirth: empData.dateOfBirth || '1995-01-01',
       photoUrl: empData.photoUrl || `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80`,
-      address: empData.address || 'San Francisco, CA',
-      emergencyContact: empData.emergencyContact || { name: 'Contact', relationship: 'Relative', phone: '+1 (415) 555-0000' },
+      address: empData.address || 'Bole Sub-City, Addis Ababa, Ethiopia',
+      emergencyContact: empData.emergencyContact || { name: 'Contact', relationship: 'Relative', phone: '+251 91 100 0000' },
       department: empData.department || 'Engineering',
       position: empData.position || 'Software Engineer',
       managerId: empData.managerId,
@@ -272,17 +290,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       employmentType: empData.employmentType || 'Full-Time',
       hireDate: empData.hireDate || new Date().toISOString().split('T')[0],
       employmentStatus: 'Active',
-      salary: empData.salary || 90000,
+      salary: empData.salary || 65000,
       payType: empData.payType || 'Salary',
-      hourlyRate: empData.hourlyRate || 43.26,
+      hourlyRate: empData.hourlyRate || 375,
       payFrequency: empData.payFrequency || 'Monthly',
       costCenter: empData.costCenter || 'CC-101',
-      location: empData.location || 'HQ - San Francisco',
-      bankInfo: empData.bankInfo || { bankName: 'Chase Bank', accountNumber: '****1234', routingNumber: '121000358' },
-      taxInfo: empData.taxInfo || { taxId: 'XXX-XX-1234', filingStatus: 'Single', allowances: 1 },
-      workSchedule: empData.workSchedule || 'Mon - Fri, 9:00 AM - 5:00 PM',
+      location: empData.location || 'HQ - Addis Ababa',
+      bankInfo: empData.bankInfo || { bankName: 'Commercial Bank of Ethiopia', accountNumber: '****1234', routingNumber: 'CBE-001' },
+      taxInfo: empData.taxInfo || { taxId: 'ET-TIN-1234', filingStatus: 'Single', allowances: 0 },
+      workSchedule: empData.workSchedule || 'Mon - Fri, 8:30 AM - 5:30 PM',
       documents: empData.documents || [],
-      leaveBalance: empData.leaveBalance || { annual: 20, sick: 10, personal: 5, maternity: 90, paternity: 14, bereavement: 5 },
+      leaveBalance: empData.leaveBalance || { annual: 20, sick: 10, personal: 5, maternity: 120, paternity: 10, bereavement: 5 },
       notes: empData.notes || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -343,7 +361,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       managerId: dept.managerId,
       managerName: dept.managerName,
       costCenter: dept.costCenter || 'CC-200',
-      location: dept.location || 'HQ - San Francisco',
+      location: dept.location || 'HQ - Addis Ababa',
       description: dept.description || '',
       employeeCount: 0,
     };
@@ -503,15 +521,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newPayslips: Payslip[] = employees
       .filter((e) => e.employmentStatus === 'Active')
       .map((e) => {
-        const monthlyBase = e.payType === 'Salary' ? e.salary / 12 : e.hourlyRate * 160;
-        const allowances = 250;
+        const monthlyBase = e.payType === 'Salary' ? e.salary : e.hourlyRate * 160;
+        const allowances = 3000;
         const gross = monthlyBase + allowances;
         
         // Ethiopia Federal Income Tax Amendment Proclamation No. 1395/2025
         const taxRes = calculateEthiopianIncomeTax(gross);
         const tax = taxRes.taxAmount;
         const retirement = gross * 0.07; // Employee Pension (7%)
-        const other = 100;
+        const other = 500;
         const totalDeductions = tax + retirement + other;
         const net = gross - totalDeductions;
 
@@ -595,7 +613,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: 'job-' + Date.now(),
       title: job.title || 'New Position',
       department: job.department || 'Engineering',
-      location: job.location || 'HQ - San Francisco',
+      location: job.location || 'HQ - Addis Ababa',
       employmentType: job.employmentType || 'Full-Time',
       status: 'Open',
       applicantsCount: 0,
@@ -614,7 +632,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       jobTitle: candidate.jobTitle || 'Job Opening',
       name: candidate.name || 'Candidate Name',
       email: candidate.email || 'cand@gmail.com',
-      phone: candidate.phone || '+1 (415) 555-1122',
+      phone: candidate.phone || '+251 91 100 0000',
       status: 'Applied',
       appliedDate: new Date().toISOString().split('T')[0],
       notes: candidate.notes || '',
@@ -736,22 +754,62 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logAction('Super Admin', 'Super Admin', 'Updated System Settings', 'Settings', 'Modified company payroll & leave settings');
   };
 
+  // Reseed all state & storage to clean Ethiopian defaults
+  const seedInitialData = async (): Promise<void> => {
+    try {
+      localStorage.setItem(HRMS_DATA_VERSION_KEY, CURRENT_DATA_VERSION);
+      localStorage.setItem('hrms_employees', JSON.stringify(INITIAL_EMPLOYEES));
+      localStorage.setItem('hrms_departments', JSON.stringify(INITIAL_DEPARTMENTS));
+      localStorage.setItem('hrms_positions', JSON.stringify(INITIAL_POSITIONS));
+      localStorage.setItem('hrms_attendance', JSON.stringify(INITIAL_ATTENDANCE));
+      localStorage.setItem('hrms_leave', JSON.stringify(INITIAL_LEAVE_REQUESTS));
+      localStorage.setItem('hrms_payslips', JSON.stringify(INITIAL_PAYSLIPS));
+      localStorage.setItem('hrms_reviews', JSON.stringify(INITIAL_PERFORMANCE_REVIEWS));
+      localStorage.setItem('hrms_jobs', JSON.stringify(INITIAL_JOBS));
+      localStorage.setItem('hrms_candidates', JSON.stringify(INITIAL_CANDIDATES));
+      localStorage.setItem('hrms_assets', JSON.stringify(INITIAL_ASSETS));
+      localStorage.setItem('hrms_announcements', JSON.stringify(INITIAL_ANNOUNCEMENTS));
+      localStorage.setItem('hrms_audit_logs', JSON.stringify(INITIAL_AUDIT_LOGS));
+      localStorage.setItem('hrms_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
+      localStorage.setItem('hrms_settings', JSON.stringify(INITIAL_SETTINGS));
+
+      setEmployees(INITIAL_EMPLOYEES);
+      setDepartments(INITIAL_DEPARTMENTS);
+      setPositions(INITIAL_POSITIONS);
+      setAttendance(INITIAL_ATTENDANCE);
+      setLeaveRequests(INITIAL_LEAVE_REQUESTS);
+      setPayslips(INITIAL_PAYSLIPS);
+      setPerformanceReviews(INITIAL_PERFORMANCE_REVIEWS);
+      setJobs(INITIAL_JOBS);
+      setCandidates(INITIAL_CANDIDATES);
+      setAssets(INITIAL_ASSETS);
+      setAnnouncements(INITIAL_ANNOUNCEMENTS);
+      setAuditLogs(INITIAL_AUDIT_LOGS);
+      setNotifications(INITIAL_NOTIFICATIONS);
+      setSettings(INITIAL_SETTINGS);
+
+      await checkAndSeedFirestore();
+    } catch (e) {
+      console.error('Failed to reseed dataset:', e);
+    }
+  };
+
   return (
     <DataContext.Provider
       value={{
-        employees,
-        departments,
-        positions,
-        attendance,
-        leaveRequests,
-        payslips,
-        performanceReviews,
-        jobs,
-        candidates,
-        assets,
-        announcements,
-        auditLogs,
-        notifications,
+        employees: Array.isArray(employees) ? employees : [],
+        departments: Array.isArray(departments) ? departments : [],
+        positions: Array.isArray(positions) ? positions : [],
+        attendance: Array.isArray(attendance) ? attendance : [],
+        leaveRequests: Array.isArray(leaveRequests) ? leaveRequests : [],
+        payslips: Array.isArray(payslips) ? payslips : [],
+        performanceReviews: Array.isArray(performanceReviews) ? performanceReviews : [],
+        jobs: Array.isArray(jobs) ? jobs : [],
+        candidates: Array.isArray(candidates) ? candidates : [],
+        assets: Array.isArray(assets) ? assets : [],
+        announcements: Array.isArray(announcements) ? announcements : [],
+        auditLogs: Array.isArray(auditLogs) ? auditLogs : [],
+        notifications: Array.isArray(notifications) ? notifications : [],
         settings,
         loading,
         addEmployee,
@@ -782,6 +840,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         markAllNotificationsRead,
         updateSettings,
         logAction,
+        seedInitialData,
       }}
     >
       {children}

@@ -17,33 +17,34 @@ import { StatCard } from '../components/common/StatCard';
 import { Modal } from '../components/common/Modal';
 
 export const AttendanceView: React.FC = () => {
-  const { attendance, clockIn, clockOut, addAttendanceRecord } = useData();
+  const { attendance = [], clockIn, clockOut, addAttendanceRecord } = useData();
+  const safeAttendance = attendance || [];
   const { currentEmployee } = useAuth();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
   // User's attendance record for today
-  const userTodayRecord = attendance.find(
-    (a) => a.employeeId === currentEmployee?.employeeId && a.date === todayStr
+  const userTodayRecord = safeAttendance.find(
+    (a) => a?.employeeId === currentEmployee?.employeeId && a?.date === todayStr
   );
 
   const isClockedIn = userTodayRecord && userTodayRecord.clockIn && !userTodayRecord.clockOut;
 
   // Stats
-  const todayRecords = attendance.filter((a) => a.date === todayStr);
-  const presentCount = todayRecords.filter((a) => a.status === 'Present').length;
-  const lateCount = todayRecords.filter((a) => a.status === 'Late').length;
-  const onLeaveCount = todayRecords.filter((a) => a.status === 'On Leave').length;
+  const todayRecords = safeAttendance.filter((a) => a?.date === todayStr);
+  const presentCount = todayRecords.filter((a) => a?.status === 'Present').length;
+  const lateCount = todayRecords.filter((a) => a?.status === 'Late').length;
+  const onLeaveCount = todayRecords.filter((a) => a?.status === 'On Leave').length;
 
   // Manual Log Modal
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [manualForm, setManualForm] = useState({
     employeeId: currentEmployee?.employeeId || 'EMP-1001',
-    employeeName: currentEmployee?.fullName || 'Sarah Jenkins',
+    employeeName: currentEmployee?.fullName || 'Sara Belay',
     department: currentEmployee?.department || 'Human Resources',
     date: todayStr,
-    clockIn: '09:00 AM',
-    clockOut: '05:00 PM',
+    clockIn: '08:30 AM',
+    clockOut: '05:30 PM',
     breakDurationMinutes: 60,
     status: 'Present' as const,
   });
@@ -84,7 +85,7 @@ export const AttendanceView: React.FC = () => {
             Time Terminal: {new Date().toLocaleTimeString()}
           </div>
           <h2 className="text-xl font-bold">
-            {currentEmployee?.fullName} ({currentEmployee?.department})
+            {currentEmployee?.fullName || 'Sara Belay'} ({currentEmployee?.department || 'Human Resources'})
           </h2>
           <p className="text-xs text-slate-300">
             {userTodayRecord?.clockIn ? (
@@ -105,7 +106,7 @@ export const AttendanceView: React.FC = () => {
               onClick={() =>
                 clockIn(
                   currentEmployee?.employeeId || 'EMP-1001',
-                  currentEmployee?.fullName || 'Sarah Jenkins',
+                  currentEmployee?.fullName || 'Sara Belay',
                   currentEmployee?.department || 'Human Resources'
                 )
               }

@@ -22,13 +22,13 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNavigate, activeView }) => {
   const { user, currentRole, currentEmployee, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { notifications, markNotificationRead, markAllNotificationsRead } = useData();
+  const { notifications = [], markNotificationRead, markAllNotificationsRead } = useData();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  const unreadNotifications = notifications.filter((n) => !n.read);
+  const unreadNotifications = (notifications || []).filter((n) => !n?.read);
 
   return (
     <>

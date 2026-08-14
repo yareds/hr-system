@@ -17,7 +17,8 @@ import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 
 export const LeaveView: React.FC = () => {
-  const { leaveRequests, submitLeaveRequest, updateLeaveStatus, employees } = useData();
+  const { leaveRequests = [], submitLeaveRequest, updateLeaveStatus, employees = [] } = useData();
+  const safeLeaveRequests = leaveRequests || [];
   const { currentEmployee, canApproveLeave } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'requests' | 'calendar' | 'balances'>('requests');
@@ -37,7 +38,7 @@ export const LeaveView: React.FC = () => {
     e.preventDefault();
     submitLeaveRequest({
       employeeId: currentEmployee?.employeeId || 'EMP-1001',
-      employeeName: currentEmployee?.fullName || 'Sarah Jenkins',
+      employeeName: currentEmployee?.fullName || 'Sara Belay',
       department: currentEmployee?.department || 'Human Resources',
       leaveType: leaveForm.leaveType,
       startDate: leaveForm.startDate,
@@ -55,9 +56,9 @@ export const LeaveView: React.FC = () => {
     });
   };
 
-  const filteredRequests = leaveRequests.filter((r) => {
+  const filteredRequests = safeLeaveRequests.filter((r) => {
     if (filterStatus === 'ALL') return true;
-    return r.status === filterStatus;
+    return r?.status === filterStatus;
   });
 
   const leaveTypesList: LeaveType[] = [
